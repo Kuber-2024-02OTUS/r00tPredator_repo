@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  namespace: homework
+  name: nginx
+spec:
+  volumes:
+  - name: shared-volumes
+    emptyDir: {}
+  initContainers:
+  - name: init-container
+    image: busybox
+    command: ['sh', '-c', 'echo "Hello!" > /init/index.html']
+    volumeMounts:
+    - name: shared-volumes
+      mountPath: /init
+  containers:
+  - name: nginx
+    image: nginx:1.25-alpine3.18
+    ports:
+    - containerPort: 8000
+    volumeMounts:
+    - name: shared-volumes
+      mountPath: /homework
+    lifecycle:
+      preStop:
+        exec:
+          command: ['sh', '-c', 'rm /homework/index.html']
