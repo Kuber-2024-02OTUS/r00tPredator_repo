@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+  namespace: homework
+  labels:
+    app: nginx
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx-web
+        image: r00tpredator/nginx:alpine1
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+         httpGet:
+          path: /index.html
+          port: 8000
+        volumeMounts:
+        - name: shared-volumes
+          mountPath: /homework
+        lifecycle:
+          preStop:
+            exec:
+              command: ["rm", "-f", "/homework/index.html"]
+      initContainers:
+      - name: init-container
+        image: busybox
+        command: ['sh', '-c', 'echo "Hello!" > /init/index.html']
+        volumeMounts:
+        - name: shared-volumes
+          mountPath: /init
+      volumes:
+      - name: shared-volumes
+        emptyDir: {}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
